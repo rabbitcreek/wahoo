@@ -127,5 +127,3 @@ float DFRobot_OxygenSensor::getAverageNum(float bArray[], uint8_t iFilterLen)
   }
   return bTemp / (float)iFilterLen;
 }
-
-
