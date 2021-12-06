@@ -24,10 +24,12 @@ float massFlow = 0;
 float volFlow = 0;
 float maxFlow = 0.0;
 float volumeTotal = 0;
+float corrvolumeTotal = 0.0;
 float TimerNow = 0.0;
 float timerThen = 0.0;
 float oneMinute = 0.0;
 float correction = 0;
+bool trip = 0;
 const int numReadings = 5;
 float oReadings[numReadings];
 float minuteTotal;
@@ -70,7 +72,7 @@ Wire.beginTransmission(SCD_ADDRESS);
   Serial.println("I2c connect success !");
 mySensor.begin(MODEL_0025AD1);
 timerThen = millis();
-oneMinute = millis();
+
   // wait for first measurement to be finished
   delay(5000);
    tft.init();
@@ -100,7 +102,12 @@ delay(8); //First measurement is available after 8ms, page 7 in cut sheet
 }
 void loop()
 {
-  //if((millis() - timerThen) > 10000)seeO();
+  
+//if((! digitalRead(buttonPin1))  || trip) {
+  //if(!trip)  oneMinute = millis();
+    //trip = 1;
+   
+  
 
 //Read pressure from SDP810
 float pressure = mySensor.getPressure();
@@ -123,7 +130,7 @@ TimerNow = millis();
   //gadgetBle.writeTemperature(0);
   //gadgetBle.writeHumidity(0);
   
-  float corrvolumeTotal = volumeTotal * correction; 
+  corrvolumeTotal = volumeTotal * correction; 
   //Serial.print(correction);
 Serial.print(volumeTotal);
 Serial.print("     ");
@@ -132,14 +139,17 @@ Serial.println(corrvolumeTotal);
 delay(20);
 
 if((millis() - oneMinute) > 30000){
+  
   oneMinute = millis();
   Serial.print( "one minute volume = ");
   Serial.print(volumeTotal);
   Serial.print("    ");
   Serial.println(corrvolumeTotal);
-  //seeO();
+  goFigure();
   volumeTotal = 0;
 }
+//screen();
+  
 }
 void seeO(){
  
@@ -183,7 +193,7 @@ void seeO(){
 void goFigure(){
   float percentN2exp;
   float co2 = 21.8 - lastOtwo;
-  float volumeMinute = volumeTotal * 2.0;
+  float volumeMinute = corrvolumeTotal * 2.0;
   volumeMinute = volumeMinute/1000.0; //gives liters of air VE
   //Serial.print("liters/min uncorrected");
   //Serial.print(volumeMinute);
@@ -217,14 +227,17 @@ void goFigure(){
   tft.setTextColor(TFT_WHITE, TFT_RED); // Orange
   //tft.drawNumber(vo2Max,100,40,7);
   tft.setCursor(70, 40, 7);
-  
+  gadgetBle.writeCO2(vo2Max);
+  gadgetBle.writeTemperature(lastOtwo);
+  gadgetBle.writeHumidity(volumeMinute);
+  gadgetBle.commit();
   if(vo2Max > vo2MaxMax) vo2MaxMax = vo2Max;
    tft.println(vo2MaxMax);
    tft.setCursor(160, 115, 4);
    tft.setTextColor(TFT_GREEN, TFT_RED);
    tft.println("RESET"); 
    
-   
+   trip = 0;
   
   
   
@@ -274,4 +287,24 @@ void wtRead(){
   int counter = 30 + (40 * buttonPushCounter2);
   tft.drawNumber(buttonPushCounter1,counter,40,7);
   }
+}
+void screen(){
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.drawCentreString("TotalVol",50,10,4);
+  tft.setTextColor(TFT_BLACK, TFT_BLACK);
+  tft.drawString("888888",40,80,7);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK); // Orange
+  //tft.drawNumber(vo2Max,40,80,7);
+  tft.setCursor(100, 40, 7);
+  int puff = corrvolumeTotal;
+ 
+   tft.println(puff); 
+   tft.setCursor(160, 115, 4);
+   tft.setTextColor(TFT_GREEN, TFT_BLACK);
+   tft.println("RESET");
+   tft.setCursor(20, 115, 4);
+   int  timeNow = (millis()- oneMinute)/1000;
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+   tft.println(timeNow );
 }
