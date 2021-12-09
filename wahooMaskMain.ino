@@ -54,6 +54,8 @@ void setup()
 Wire.begin();
 Serial.begin(115200);
 while(!Serial);
+ 
+
 gadgetBle.begin();
  delay(1000);
   Serial.print("Sensirion GadgetBle Lib initialized with deviceId = ");
@@ -65,16 +67,17 @@ Wire.beginTransmission(SCD_ADDRESS);
   Wire.write(0x21);
   Wire.write(0xb1);
   Wire.endTransmission();
-   while(!Oxygen.begin(Oxygen_IICAddress)) {
+  while(!Oxygen.begin(Oxygen_IICAddress)) {
     Serial.println("I2c device number error !");
     delay(1000);
   }
   Serial.println("I2c connect success !");
+   
 mySensor.begin(MODEL_0025AD1);
 timerThen = millis();
 
   // wait for first measurement to be finished
-  delay(5000);
+  delay(2000);
    tft.init();
   tft.setRotation(1);
   tft.fillScreen(TFT_BLACK);
@@ -97,8 +100,18 @@ timerThen = millis();
   tft.setTextColor(TFT_GREEN, TFT_RED);
   tft.println("GO!");
   minuteTotal = millis();
+  
   correction = 12.50/19.00;
-delay(8); //First measurement is available after 8ms, page 7 in cut sheet
+  while(digitalRead(buttonPin1));
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.drawCentreString("TotalVol",50,10,4);
+  tft.setTextColor(TFT_BLACK, TFT_BLACK);
+  tft.drawString("888888",40,80,7);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK); // Orange
+  //tft.drawNumber(vo2Max,40,80,7);
+  tft.setCursor(100, 40, 7);
+//delay(8); //First measurement is available after 8ms, page 7 in cut sheet
 }
 void loop()
 {
@@ -148,7 +161,7 @@ if((millis() - oneMinute) > 30000){
   goFigure();
   volumeTotal = 0;
 }
-//screen();
+
   
 }
 void seeO(){
@@ -158,13 +171,7 @@ void seeO(){
   Serial.print(oxygenData);
   Serial.println(" %vol");
   delay(1000);
-  
-  //float projectedCO2 = 21.8 - oxygenData;
-  //Serial.print( "projected Co2 = ");
-  //Serial.println( projectedCO2 );
- //gadgetBle.writeCO2(co2);
- //gadgetBle.writeTemperature(oxygenData);
- //gadgetBle.writeHumidity(volumeTotal/1000);
+ 
 
  //gadgetBle.commit();
   oTotal = oTotal - oReadings[oreadIndex];
@@ -186,13 +193,20 @@ void seeO(){
   // send it to the computer as ASCII digits
   
   lastOtwo = oAverage;
+  //screen();
   timerThen = millis();
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK); // Orange
+  //tft.drawNumber(vo2Max,40,80,7);
+  tft.setCursor(100, 40, 7);
+  int puff = corrvolumeTotal; 
+  tft.println(puff); 
 
   
 }
 void goFigure(){
   float percentN2exp;
-  float co2 = 21.8 - lastOtwo;
+  float co2 = 20.9 - lastOtwo;
   float volumeMinute = corrvolumeTotal * 2.0;
   volumeMinute = volumeMinute/1000.0; //gives liters of air VE
   //Serial.print("liters/min uncorrected");
@@ -219,6 +233,7 @@ void goFigure(){
   vo2Max = (vo2Max * 1000.0)/(float(wtTotal)/2.2);
   //Serial.print("VO2Max!!!ml/kg:  ");
   //Serial.print(vo2Max);
+  /*
   tft.fillScreen(TFT_RED);
   tft.setTextColor(TFT_GREEN, TFT_RED);
   tft.drawCentreString("VO2Max= ",60,10,4);
@@ -227,19 +242,22 @@ void goFigure(){
   tft.setTextColor(TFT_WHITE, TFT_RED); // Orange
   //tft.drawNumber(vo2Max,100,40,7);
   tft.setCursor(70, 40, 7);
+  */
   gadgetBle.writeCO2(vo2Max);
   gadgetBle.writeTemperature(lastOtwo);
   gadgetBle.writeHumidity(volumeMinute);
   gadgetBle.commit();
   if(vo2Max > vo2MaxMax) vo2MaxMax = vo2Max;
+  /*
    tft.println(vo2MaxMax);
    tft.setCursor(160, 115, 4);
    tft.setTextColor(TFT_GREEN, TFT_RED);
    tft.println("RESET"); 
-   
+ */  
    trip = 0;
   
-  
+   gadgetBle.handleEvents();
+   delay(3);
   
 }
 void wtRead(){
