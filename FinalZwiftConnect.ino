@@ -68,6 +68,7 @@ float calTotal = 0;
 float timerTotal = 0;
 float vo2Cal = 0;
 float vo2CalMax = 0.0;
+float vo2CalMaxMax = 0.0;
 float vo2Max= 0; //value of vo2Max every 30 seconds
  float vo2MaxMax= 0;  //Best value of vo2 max for whole time machine is on
 DFRobot_OxygenSensor Oxygen;  //Label of oxygen sensor
@@ -224,7 +225,7 @@ void goFigure(){
   //This will broadcast the data to Sensirion App:  Uncomment all to activate!
   
   if(vo2Max > vo2MaxMax) vo2MaxMax = vo2Max;
-   
+  if(vo2CalMax > vo2CalMaxMax) vo2CalMaxMax = vo2CalMax; 
   Serial.print("vo2Cal  ");
   Serial.print(vo2Cal); 
   Serial.print("vo2Cal in 24 hours=   ");
@@ -244,6 +245,21 @@ void goFigure(){
   tft.setCursor(120, 5, 4);
   tft.setTextColor(TFT_RED, TFT_BLACK); 
   tft.println(timerTotal);
+  int stopper = timerTotal * 10;
+  if(stopper % 2){
+  tft.setCursor(5, 35, 4);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK); 
+  tft.print("VO2MAX ");
+  tft.setCursor(120, 35, 4);
+  tft.println(vo2MaxMax);
+  tft.setCursor(5, 65, 4);
+  tft.print("KCalMax ");
+  tft.setCursor(120, 65, 4);
+  tft.println(vo2CalMaxMax);
+  tft.print("Kcal/Day");
+  tft.setCursor(120, 95, 4);
+  tft.println(vo2CalMax);
+  }else{
   tft.setCursor(5, 35, 4);
   tft.setTextColor(TFT_GREEN, TFT_BLACK); 
   tft.print("O2  ");
@@ -253,13 +269,7 @@ void goFigure(){
   tft.print("VO2  ");
   tft.setCursor(120, 65, 4);
   tft.println(vo2Max);
-  tft.setCursor(5, 95, 4);
-  int stopper = timerTotal * 10;
-  if(stopper % 2) {
-  tft.print("Kcal/Day");
-  tft.setCursor(120, 95, 4);
-  tft.println(vo2CalMax);
-  }else{
+  tft.setCursor(5, 95, 4);  
   tft.print("Cals  ");
   tft.setCursor(120, 95, 4);
   tft.println(calTotal);
