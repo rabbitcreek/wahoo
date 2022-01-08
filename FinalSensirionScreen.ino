@@ -146,8 +146,7 @@ volumeTotal = volFlow * (millis() - TimerNow) + volumeTotal;//int
 }else if((millis() - timerThen) > 5000) seeO(); //If pressure is <1 and timer is over 5 seconds check oxygen level
 TimerNow = millis(); ///This is part of the integral function to keep calculation volume over time..resets amount of time between calcs
  
-corrvolumeTotal = volumeTotal * correction; //This is where a correcion factor changes volume to corrvolumeTotal
-  //Serial.print(correction);
+
 /*
 Serial.print(volumeTotal);
 Serial.print("     ");
@@ -155,7 +154,8 @@ Serial.println(corrvolumeTotal);
 delay(20);
 */
 if((millis() - oneMinute) > 30000){ // This calls goFigue calculation to figure Vo2Max every 30 seconds
-  
+  corrvolumeTotal = volumeTotal * correction; //This is where a correcion factor changes volume to corrvolumeTotal
+  //Serial.print(correction);
   oneMinute = millis();  //resets the timer
   Serial.print( "one minute volume = ");
   Serial.print(volumeTotal);
@@ -177,36 +177,7 @@ void seeO(){
   delay(1000);
   lastOtwo = oxygenData;
   timerThen = millis();
-  /*
-//This is the averaging array--rolling with three input (average O2 over 15 seconds)
-  oTotal = oTotal - oReadings[oreadIndex];
-  // read from the sensor:
-  oReadings[oreadIndex] = oxygenData;
-  // add the reading to the total:
-  oTotal = oTotal + oReadings[oreadIndex];
-  // advance to the next position in the array:
-  oreadIndex = oreadIndex + 1;
 
-  // if we're at the end of the array...
-  if (oreadIndex >= numReadings) {
-    // ...wrap around to the beginning:
-    oreadIndex = 0;
-  }
-
-  // calculate the average:
-  oAverage = oTotal / numReadings;
-  // send it to the computer as ASCII digits
-  
-  lastOtwo = oAverage;
-  //Publishes vo2Max to TV bluetooth
-  
-//Pushes the current volume to the screen
-  //tft.fillScreen(TFT_BLACK);
-  //tft.setTextColor(TFT_WHITE, TFT_BLACK); // Orange
-  //tft.setCursor(100, 40, 7);
-  int puff = corrvolumeTotal; 
-  //tft.println(puff); 
-*/
   
 }
 void goFigure(){
@@ -257,6 +228,21 @@ void goFigure(){
   tft.setCursor(120, 5, 4);
   tft.setTextColor(TFT_RED, TFT_BLACK); 
   tft.println(timerTotal);
+  int stopper = timerTotal * 10;
+  if(stopper % 2){
+  tft.setCursor(5, 35, 4);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK); 
+  tft.print("VO2MAX ");
+  tft.setCursor(120, 35, 4);
+  tft.println(vo2MaxMax);
+  tft.setCursor(5, 65, 4);
+  tft.print("KCalMax ");
+  tft.setCursor(120, 65, 4);
+  tft.println(vo2CalMaxMax);
+  tft.print("Kcal/Day");
+  tft.setCursor(120, 95, 4);
+  tft.println(vo2CalMax);
+  }else{
   tft.setCursor(5, 35, 4);
   tft.setTextColor(TFT_GREEN, TFT_BLACK); 
   tft.print("O2  ");
@@ -266,13 +252,7 @@ void goFigure(){
   tft.print("VO2  ");
   tft.setCursor(120, 65, 4);
   tft.println(vo2Max);
-  tft.setCursor(5, 95, 4);
-  int stopper = timerTotal * 10;
-  if(stopper % 2) {
-  tft.print("Kcal/Day");
-  tft.setCursor(120, 95, 4);
-  tft.println(vo2CalMax);
-  }else{
+  tft.setCursor(5, 95, 4);  
   tft.print("Cals  ");
   tft.setCursor(120, 95, 4);
   tft.println(calTotal);
